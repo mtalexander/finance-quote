@@ -7,7 +7,7 @@ if (not $ENV{ONLINE_TEST}) {
     plan skip_all => 'Set $ENV{ONLINE_TEST} to run this test';
 }
 
-plan tests => 11;
+plan tests => 12;
 
 # Test currency conversion, both explicit requests and automatic
 # conversion.
@@ -43,6 +43,14 @@ ok($info{"UG.PA","price"} > 0);		# Test 9
 # Check if inverse is working ok
 ok(check_inverse("EUR","RUB"),"Inverse is calculated correctly: multiplication should be 1");
 ok(check_inverse("CZK","USD"),"Inverse is calculated correctly: multiplication should be 1");
+
+# Test 12
+# Yahoo sometimes return rates that are multiplied by 100,
+# but only in one direction
+my $nokgbp=$q->currency("NOK", "GBP");
+my $gbpnok=$q->currency("GBP", "NOK");
+my $ratio = $gbpnok / (1.0 / $nokgbp);
+ok(abs(1-$ratio) < 0.05); 
 
 sub check_inverse {
     my ($cur1,$cur2)=@_;
