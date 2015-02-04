@@ -20,4 +20,4 @@ install:
     - dzil listdeps --author  | cpanm --notest --skip-satisfied
 
 script:
-    - dzil test --all
+    - env ONLINE_TEST=1 dzil test --all
