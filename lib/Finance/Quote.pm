@@ -134,6 +134,7 @@ sub _load_modules {
       @currency_fields=grep {!$seen{$_}++} @currency_fields;
 
       foreach my $method (keys %methodhash) {
+        #print "$method provided by $module\n";
         push (@{$METHODS{$method}},
           { function => $methodhash{$method},
             labels   => $labelhash{$method},
