@@ -30,11 +30,7 @@ my $ALPHAVANTAGE_URL =
     'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&outputsize=compact&datatype=json';
 my $ALPHAVANTAGE_API_KEY = $ENV{'ALPHAVANTAGE_API_KEY'};
 
-die
-    'Expected ALPHAVANTAGE_API_KEY to be set; get an API key at https://www.alphavantage.co'
-    unless ( defined $ALPHAVANTAGE_API_KEY );
-
-my %currencies_by_suffix = ( '.BR' => 'EUR', );
+my %currencies_by_suffix = ( '.BR' => 'EUR', '.DE' => 'EUR', '.L' => 'GBP', );
 
 sub methods {
     return ( alphavantage => \&alphavantage, );
@@ -48,11 +44,20 @@ sub methods {
 
 sub alphavantage {
     my $quoter = shift;
+
     my @stocks = @_;
     my ( %info, $reply, $url );
     my $ua = $quoter->user_agent();
 
     foreach my $stock (@stocks) {
+
+        if ( !defined $ALPHAVANTAGE_API_KEY ) {
+            $info{ $stock, 'success' } = 0;
+            $info{ $stock, 'errormsg' } =
+                'Expected ALPHAVANTAGE_API_KEY to be set; get an API key at https://www.alphavantage.co';
+            next;
+        }
+
         $url =
               $ALPHAVANTAGE_URL
             . '&apikey='
@@ -78,8 +83,25 @@ sub alphavantage {
             next;
         }
 
-        my $last_refresh = $json_data->{'Meta Data'}->{'3. Last Refreshed'};
+        my $last_refresh = $json_data->{'Meta Data'}->{'3. Last Refreshed'}; # when market is open this returns an isodate + time, otherwise only the isodate
+        $last_refresh = substr($last_refresh,0,10);  # remove time if returned
+        if ( !$last_refresh ) {
+            $info{ $stock, 'success' } = 0;
+            $info{ $stock, 'errormsg' } = "json_data doesn't contain Last Refreshed";
+            next;
+        }
         my $isodate = substr( $last_refresh, 0, 10 );
+        if ( !$json_data->{'Time Series (Daily)'} ) {
+            $info{ $stock, 'success' } = 0;
+            $info{ $stock, 'errormsg' } = "json_data doesn't contain Time Series hash";
+            next;
+        }
+        if ( !$json_data->{'Time Series (Daily)'}->{$last_refresh} ) {
+            $info{ $stock, 'success' } = 0;
+            $info{ $stock, 'errormsg' } = "json_data doesn't contain latest refresh data in Time Series hash";
+            next;
+        }
+
         my %ts = %{ $json_data->{'Time Series (Daily)'}->{$last_refresh} };
         if ( !%ts ) {
             $info{ $stock, 'success' }  = 0;
@@ -107,7 +129,7 @@ sub alphavantage {
         $info{ $stock, 'method' }  = 'alphavantage';
         $quoter->store_date( \%info, $stock, { isodate => $isodate } );
         # deduce currency
-        if ($stock =~ /\.(.*)/) {
+        if ($stock =~ /(\..*)/) {
                 my $suffix = $1;
                 $info{ $stock, 'currency' } = $currencies_by_suffix{$suffix}
                     if ( $currencies_by_suffix{$suffix} );

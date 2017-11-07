@@ -1,4 +1,14 @@
 {{$NEXT}}
+
+1.43      2017-11-06 23:41:47+01:00 Europe/Brussels
+        * Added currency for .DE market
+        * BUGFIX in currency determination regex
+
+1.42      2017-11-06 19:04:25+01:00 Europe/Brussels
+        * more tests in alphavantage.t
+        * BUG resolved: removed time from $last_refresh when markets are open
+
+1.41      2017-11-06 16:06:41+01:00 Europe/Brussels
         * return symbol for AlphaVantage data
 
 1.39
