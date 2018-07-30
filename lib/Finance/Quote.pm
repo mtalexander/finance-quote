@@ -54,7 +54,7 @@ $ALPHAVANTAGE_CURRENCY_URL = "https://www.alphavantage.co/query?function=CURRENC
 
 @ISA    = qw/Exporter/;
 @EXPORT = ();
-@EXPORT_OK = qw/yahoo yahoo_europe fidelity troweprice asx tiaacref
+@EXPORT_OK = qw/fidelity troweprice asx tiaacref
                 currency_lookup/;
 @EXPORT_TAGS = ( all => [@EXPORT_OK]);
 
@@ -183,8 +183,7 @@ sub new {
             Platinum SEB SIXfunds SIXshares StockHouseCanada TSP TSX
             Tdefunds Tdwaterhouse Tiaacref TNetuk Troweprice Trustnet
             Union USFedBonds VWD ZA Cominvest Finanzpartner YahooJSON
-            Yahoo::Asia Yahoo::Australia Yahoo::Brasil Yahoo::Europe
-            Yahoo::NZ Yahoo::USA YahooYQL ZA_UnitTrusts/; }
+            YahooYQL ZA_UnitTrusts/; }
 
   $this->_load_modules(@modules,@reqmodules);
 
@@ -252,7 +251,7 @@ sub currency {
 
   my $ALPHAVANTAGE_API_KEY = $ENV{'ALPHAVANTAGE_API_KEY'};
   return undef unless ( defined $ALPHAVANTAGE_API_KEY );
- 
+
   my $try_cnt = 0;
   my $json_data;
   do {
@@ -273,13 +272,11 @@ sub currency {
       return undef;
     }
 #     print "Failed: " . $json_data->{'Information'} . "\n" if (($try_cnt < 5) && ($json_data->{'Information'}));
-    sleep (40) if (($try_cnt < 5) && ($json_data->{'Information'}));
+    sleep (20) if (($try_cnt < 5) && ($json_data->{'Information'}));
   } while (($try_cnt < 5) && ($json_data->{'Information'}));
-  
-  sleep(1);
 
   my $exchange_rate = $json_data->{'Realtime Currency Exchange Rate'}->{'5. Exchange Rate'};
-  
+
   {
     local $^W = 0;  # Avoid undef warnings.
 
