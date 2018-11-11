@@ -32,7 +32,7 @@ use Time::HiRes qw(usleep clock_gettime);
 # optimal server-side performance:
 #   https://www.alphavantage.co/support/#api-key
 our @alphaqueries=();
-my $maxQueries = { quantity =>20 , seconds => 65}; # no more than x queries per y seconds
+my $maxQueries = { quantity =>5 , seconds => 55}; # no more than x queries per y seconds
 
 my $ALPHAVANTAGE_URL =
     'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&outputsize=compact&datatype=json';
@@ -192,8 +192,9 @@ sub alphavantage {
         }
 
         my $try_cnt = 0;
-        while (($try_cnt < 5) && ($json_data->{'Information'})) {
+        while (($try_cnt < 5) && ($json_data->{'Information'} || $json_data->{'Note'})) {
             # print STDERR "INFORMATION:".$json_data->{'Information'}."\n";
+            # print STDERR "NOTE:".$json_data->{'Note'}."\n";
             # print STDERR "ADDITIONAL SLEEPING HERE !";
             sleep (20);
             &$get_content();
