@@ -13,8 +13,8 @@
 #
 #    You should have received a copy of the GNU General Public License
 #    along with this program; if not, write to the Free Software
-#    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-#    02111-1307, USA
+#    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+#    02110-1301, USA
 
 package Finance::Quote::AlphaVantage;
 
@@ -25,14 +25,16 @@ require 5.005;
 use strict;
 use JSON qw( decode_json );
 use HTTP::Request::Common;
-use Time::HiRes qw(usleep clock_gettime);
 
 # Alpha Vantage recommends that API call frequency does not extend far
 # beyond ~1 call per second so that they can continue to deliver
 # optimal server-side performance:
 #   https://www.alphavantage.co/support/#api-key
 our @alphaqueries=();
-my $maxQueries = { quantity =>5 , seconds => 55}; # no more than x queries per y seconds
+my $maxQueries = { quantity =>5 , seconds => 60}; # no more than x
+                                                  # queries per y
+                                                  # seconds, based on
+                                                  # https://www.alphavantage.co/support/#support
 
 my $ALPHAVANTAGE_URL =
     'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&outputsize=compact&datatype=json';
@@ -96,6 +98,7 @@ my %currencies_by_suffix = (
     '.MA'  => "EUR",    # 		Madrid
     '.VA'  => "EUR",    # 		Valence
     '.ST'  => "SEK",    # Sweden		Stockholm
+    '.STO' => "SEK",    # Sweden		Stockholm
     '.HE'  => "EUR",    # Finland		Helsinki
     '.S'   => "CHF",    # Switzerland	Zurich
     '.TW'  => "TWD",    # Taiwan		Taiwan Stock Exchange
@@ -117,8 +120,10 @@ sub methods {
              nasdaq       => \&alphavantage,
              vanguard     => \&alphavantage,
     );
+}
 
-    our @labels = qw/date isodate open high low close volume last/;
+{
+    my @labels = qw/date isodate open high low close volume last/;
 
     sub labels {
         return ( alphavantage => \@labels, );
@@ -127,18 +132,18 @@ sub methods {
 
 sub sleep_before_query {
     # wait till we can query again
-    my $q = $maxQueries->{quantity};
+    my $q = $maxQueries->{quantity}-1;
     if ( $#alphaqueries >= $q ) {
-        my $time_since_x_queries = clock_gettime()-$alphaqueries[$q];
+        my $time_since_x_queries = time()-$alphaqueries[$q];
         # print STDERR "LAST QUERY $time_since_x_queries\n";
         if ($time_since_x_queries < $maxQueries->{seconds}) {
-            my $sleeptime = ($maxQueries->{seconds} - $time_since_x_queries) * 1000000;
+            my $sleeptime = ($maxQueries->{seconds} - $time_since_x_queries) ;
             # print STDERR "SLEEP $sleeptime\n";
-            usleep( $sleeptime );
+            sleep( $sleeptime );
             # print STDERR "CONTINUE\n";
         }
     }
-    unshift @alphaqueries, clock_gettime();
+    unshift @alphaqueries, time();
     pop @alphaqueries while $#alphaqueries>$q; # remove unnecessary data
     # print STDERR join(",",@alphaqueries)."\n";
 }
@@ -150,6 +155,7 @@ sub alphavantage {
     my $quantity = @stocks;
     my ( %info, $reply, $url, $code, $desc, $body );
     my $ua = $quoter->user_agent();
+    my $launch_time = time();
 
     foreach my $stock (@stocks) {
 
@@ -169,6 +175,8 @@ sub alphavantage {
 
         my $get_content = sub {
             sleep_before_query();
+            my $time=int(time()-$launch_time);
+            # print STDERR "Query at:".$time."\n";
             $reply = $ua->request( GET $url);
 
             $code = $reply->code;
@@ -192,8 +200,7 @@ sub alphavantage {
         }
 
         my $try_cnt = 0;
-        while (($try_cnt < 5) && ($json_data->{'Information'} || $json_data->{'Note'})) {
-            # print STDERR "INFORMATION:".$json_data->{'Information'}."\n";
+        while (($try_cnt < 5) && ($json_data->{'Note'})) {
             # print STDERR "NOTE:".$json_data->{'Note'}."\n";
             # print STDERR "ADDITIONAL SLEEPING HERE !";
             sleep (20);
