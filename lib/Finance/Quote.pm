@@ -275,9 +275,9 @@ sub currency {
     if ( !$json_data || $json_data->{'Error Message'} ) {
       return undef;
     }
-    # print "Failed: " . $json_data->{'Note'} . "\n" if (($try_cnt < 5) && ($json_data->{'Note'}));
-    sleep (20) if (($try_cnt < 5) && ($json_data->{'Information'} || $json_data->{'Note'}));
-  } while (($try_cnt < 5) && ($json_data->{'Information'} || $json_data->{'Note'}));
+#     print "Failed: " . $json_data->{'Note'} . "\n" if (($try_cnt < 5) && ($json_data->{'Note'}));
+    sleep (20) if (($try_cnt < 5) && ($json_data->{'Note'}));
+  } while (($try_cnt < 5) && ($json_data->{'Note'}));
 
   my $exchange_rate = $json_data->{'Realtime Currency Exchange Rate'}->{'5. Exchange Rate'};
 
