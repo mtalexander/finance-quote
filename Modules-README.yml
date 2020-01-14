@@ -49,10 +49,10 @@
 - module: AlphaVantage.pm
   state: working
   added:
-  changed: 2019-06-16
+  changed: 2019-12-01
   removed:
   urls:
-    - https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&outputsize=compact&datatype=json&apikey=$ALPHAVANTAGE_API_KEY
+    - https://www.alphavantage.co/query?function=GLOBAL_QUOTE&apikey=$ALPHAVANTAGE_API_KEY&symbol=
   apikey: true
   notes: |
     Module to acquire data from https://www.alphavantage.co/.
@@ -141,15 +141,18 @@
   testcases:
 #
 - module: Cdnfundlibrary.pm
-  state: TBD
+  state: working
   added: TBD
-  changed: ~
+  changed: 2019-12-01
   removed: ~
   urls:
+    - https://www.fundlibrary.com/MutualFunds/GetFundSearchResults?cifscCategoryId=0&fundCompanyId=0&fundTypeId=0&isGradeA=true&isGradeB=true&isGradeC=true&isGradeD=true&isGradeE=true&sortBy=Default&page=0&searchText=
   apikey: false
   notes: ~
-  testfile: TBD
+  testfile: cdnfundlibrary.t
   testcases:
+    - NBC887
+    - TDB3533
 #
 - module: Citywire.pm
   state: TBD
