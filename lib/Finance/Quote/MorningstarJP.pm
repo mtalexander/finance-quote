@@ -32,15 +32,15 @@ our @EXPORT_OK = qw(morningstarjp methods labels);
 
 # NAV information (basis price)
 $MORNINGSTAR_JP_URL =
-  ('http://www.morningstar.co.jp/FundData/DownloadStdYmd.do?fnc=');
+  ('https://www.morningstar.co.jp/FundData/DownloadStdYmd.do?fnc=');
 
 sub methods { return ( morningstarjp => \&morningstarjp ); }
 sub labels  { return ( morningstarjp => [qw/symbol date nav/] ); }
 
 sub morningstarjp
 {
-  my @symbols = @_;
   my $quoter  = shift;
+  my @symbols = @_;
 
   my (
        $ua,    $response, %info,   $date,    $nav,   $year,
