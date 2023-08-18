@@ -5,15 +5,23 @@
 - module: AEX.pm
   state: working
   added: TBD
-  changed: ~
+  changed: 2023-06-05
   removed: ~
   urls:
+    - https://live.euronext.com/en/search_instruments/
+    - https://live.euronext.com/en/ajax/getDetailedQuote/
+    - https://live.euronext.com/en/intraday_chart/getDetailedQuoteAjax/
   apikey: false
-  notes: ~
-  testfile: TBD
+  notes: |
+    The module uses all three URLs listed. Cookies and other header data
+    retrieved are needed to get data from subsequent HTTP requests.
+  testfile: aex.t
   testcases:
-    - AH
+    - AD
     - AMG
+    - LVMH
+    - XS0937858271
+    - NL0000009165
 #
 - module: AIAHK.pm
   state: working
@@ -65,7 +73,7 @@
 - module: AlphaVantage.pm
   state: working
   added:
-  changed: 2019-12-01
+  changed: 2023-07-28
   removed:
   urls:
     - https://www.alphavantage.co/query?function=GLOBAL_QUOTE&apikey=$ALPHAVANTAGE_API_KEY&symbol=
@@ -73,7 +81,8 @@
   notes: |
     Module to acquire data from https://www.alphavantage.co/.
     Users must first request an API key and set the environment
-    variable ALPHAVANTAGE_API_KEY.
+    variable ALPHAVANTAGE_API_KEY. The AlphaVantage API does not
+    return a currency.
   testfile: alphavantage.t
   testcases:
     - IBM
@@ -89,7 +98,6 @@
     - TWTR
     - AAPL
     - ORCL
-    - FB
     - CMCSA
     - INTC
     - NFLX
@@ -115,7 +123,7 @@
 - module: BSEIndia.pm
   state: working
   added: 2020-06-27
-  changed:
+  changed: 2023-08-12
   removed:
   urls:
     - https://www.bseindia.com/download/BhavCopy/Equity/EQ_ISINCODE_${DDMMYY}.zip
@@ -127,7 +135,6 @@
     Module to fetch equity quotes from https://www.bseindia.com/
   testfile: bseindia.t
   testcases:
-    - 500010
     - 532540
     - INE009A01021
     - INE062A01020
@@ -144,36 +151,56 @@
   testcases:
 #
 - module: Bloomberg.pm
-  state: removed
-  added: TBD
-  changed: ~
-  removed: ~
-  urls:
+  state: working
+  added: 
+  changed: 2023-08-01
+  removed: 
+  urls: https://www.bloomberg.com/quote/
   apikey: false
-  notes: Not present in the distro and thus marked as removed
-  testfile: TBD
-  testcases:
+  notes: 
+  testfile: bloomberg.t
+  testcases: 
+    - MSFT:US
+    - AMZN:US
+    - AAPL:US
+    - GOOGL:US
+    - META:US
+    - FOLSHM1:LN
 #
 - module: Bourso.pm
-  state: failing
+  state: working
   added:
-  changed: 2020-03~31
+  changed: 2023-05-22
   removed:
   urls: https://www.boursorama.com/cours/$stock
   apikey: false
-  notes: ~
+  notes: The test file checks for specific values returned and may falsly report errors when the information correctly returned from the URL changes.
   testfile: bourso.t
   testcases:
     - MP-802941
     - 1rPAF
     - MSFT
     - FF11-SOLB
-    - 1rPSOLB
-    - 1rPCNP
     - 2rPDE000CX0QLH6
     - 1rPFR0010371401
     - 1rPCAC
     - 1rTBX4
+    - FR0010037341
+#
+- module: BVB.pm
+  state: working
+  added: 2023-05-28
+  changed: ~
+  removed: ~
+  urls: https://bvb.ro/FinancialInstruments/Details/FinancialInstrumentsDetails.aspx?s=
+  apikey: false
+  notes: |
+    Issue #269 indicates the URL in Tradeville no longer works. BVB.pm written to replace it. Returns tradeville in methods hash.
+  testfile: bvb.t
+  testcases:
+    - TLV
+    - BRD
+    - SNP
 #
 - module: CSE.pm
   state: failing
@@ -222,6 +249,32 @@
   testfile: TBD
   testcases:
 #
+- module: Consorsbank.pm
+  state: working
+  added: 2023-07-20
+  changed: ~
+  removed: ~
+  urls:
+    - https://www.consorsbank.de/web-financialinfo-service/api/marketdata/stocks?id=$symbol&field=QuotesV1&field=BasicV1
+  apikey: false
+  notes: |
+    Module to acquire data from https://www.consorsbank.de.
+  testfile: consorsbank.t
+  testcases:
+    - DE0007664005
+    - 766400
+    - DE0008469008
+    - FR0003500008
+    - _81341467
+    - DE000CX0QLH6
+    - DE0001102580
+    - FR0010411884
+    - LU1508476725
+    - EU0009652759
+    - FR0010037341
+    - DE000DB4CAT1
+    - BOGUS
+#
 - module: Currencies.pm
   state: working
   added: TBD
@@ -233,16 +286,52 @@
   testfile: TBD
   testcases:
 #
-- module: DWS.pm
-  state: failing
-  added: TBD
-  changed: ~
+- module: CurrencyRates/AlphaVantage.pm
+  state: working
+  Added: TBD
+  changed: 2022-11-23
   removed: ~
-  urls:
-  apikey: false
-  notes: ~
-  testfile: TBD
+  urls: https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE
+  apikey: true
+  notes: |
+    Recently modified for Issue #229 in PR #230
+    The commit/PR was reverted 2022-11-23 (PR #249), AlphaVantage changed
+    the CURRENCY_EXCHANGE_RATE to no longer require a premium API Key.
+  testfile: currency.t
   testcases:
+    - GBP IQD
+    - AUD AUD
+#
+- module: CurrencyRates/YahooJSON.pm
+  state: working
+  Added: 2023-04-09
+  changed: 2023-07-14
+  removed: ~
+  urls: https://query2.finance.yahoo.com/v11/finance/quoteSummary/?symbol=...&modules=price
+  apikey: false
+  notes: |
+    URL is constructed by adding "$from$to%3DX" to Yahoo URL.
+    Can be used for crypto by adding "$from-$to" to the URL.
+  testfile: currency.t
+  testcases:
+    - USD EUR
+    - GBP IDR
+    - IDR CAD
+    - AUD AUD
+#
+- module: DWS.pm
+  state: working
+  added: TBD
+  changed: 2022-09-28
+  removed: ~
+  urls: https://www.deami.de/dps/ff/prices.aspx
+  apikey: false
+  notes: Test file checks that name returned in JSON matches hard coded value in dws.t
+  testfile: dws.t
+  testcases:
+    - 848646
+    - DE0008486465
+    - LU0358627221
 #
 - module: Deka.pm
   state: working
@@ -256,6 +345,22 @@
   testcases:
     - DE0008474511
     - LU0051755006
+#
+- module: Fondsweb.pm
+  state: working
+  added: TBD
+  changed: 2022-11-21
+  removed: ~
+  urls: https://www.fondsweb.com/de/
+  apikey: false
+  notes: ~
+  testfile: fondsweb.t
+  testcases:
+    - LU0804734787
+    - DE0008491002
+    - DE0008474503
+    - DE0008491051
+    - DE0009805507
 #
 - module: FTPortfolios.pm
   state: failing
@@ -271,18 +376,18 @@
 - module: FTfunds.pm
   state: working
   added: 2014-03-02
-  changed: ~
+  changed: 2023-04-09
   removed: ~
   urls:
     - https://markets.ft.com/data/funds/tearsheet/summary?s=
     - http://funds.ft.com/UnlistedTearsheet/Summary?s=
   apikey: false
-  notes:
+  notes: 
     - Added date is an estimate. According to Git log it first appeared in commit fdd204b.
   testfile: ftfunds.t
   testcases:
-    - GB0031835118
-    - GB0030880255
+    - GB0031834814
+    - GB0030881337
     - GB0003865176
     - GB00B7W6PR65
 #
@@ -314,13 +419,13 @@
   testcases:
 #
 - module: FinanceCanada.pm
-  state: TBD
-  added: TBD
+  state: Not Working
+  added: Unknown
   changed: ~
-  removed: ~
+  removed: 2020-10-10
   urls:
   apikey: false
-  notes: ~
+  notes: Removed in commit b22963e664a6455ef83620cf05f875bf4a65ea3a.
   testfile: TBD
   testcases:
 #
@@ -338,12 +443,12 @@
 - module: Fool.pm
   state: working
   added: 2001-05-08
-  changed: 2019-06-21
+  changed: 2023-05-29
   removed:
   urls:
     - http://caps.fool.com/Ticker/{$symbol}.aspx
   apikey: false
-  notes: ~
+  notes: Needed to set "user-agent" to something other than the default
   testfile: fool.t
   testcases:
     - MSFT
@@ -351,7 +456,6 @@
     - AAPL
     - GOOGL
     - GOOG
-    - FB
     - CSCO
     - INTC
     - CMCSA
@@ -385,6 +489,20 @@
   notes: ~
   testfile: TBD
   testcases:
+#
+- module: GoogleWeb.pm
+  state: working
+  added: 2023-06-12
+  changed: ~
+  removed: ~
+  urls: https://www.google.com/finance/
+  apikey: false
+  notes: ~
+  testfile: googleweb.t
+  testcases:
+    - AAPL
+    - KNW
+    - GE
 #
 - module: HEX.pm
   state: TBD
@@ -455,28 +573,23 @@
     - IBKR
 #
 - module: IndiaMutual.pm
-  state: TBD
+  state: working
   added: TBD
-  changed: ~
+  changed: 2023-06-06
   removed: ~
-  urls:
+  urls: https://www.amfiindia.com/spages/NAVAll.txt
   apikey: false
   notes: ~
-  testfile: TBD
+  testfile: indiamutual.t
   testcases:
+    - 102676
+    - 103131
+    - 148181
+    - INF194K01W88
+    - INF090I01FN7
+    - INF082J01127
 #
 - module: LeRevenu.pm
-  state: TBD
-  added: TBD
-  changed: ~
-  removed: ~
-  urls:
-  apikey: false
-  notes: ~
-  testfile: TBD
-  testcases:
-#
-- module: MStaruk.pm
   state: TBD
   added: TBD
   changed: ~
@@ -498,26 +611,59 @@
   testfile: TBD
   testcases:
 #
-- module: Morningstar.pm
+- module: MarketWatch.pm
   state: TBD
-  added: TBD
+  added: 2023-06-06
   changed: ~
   removed: ~
-  urls:
+  urls: https://www.marketwatch.com/investing/stock/aapl
   apikey: false
   notes: ~
-  testfile: TBD
+  testfile: marketwatch.t
   testcases:
+    - AAPL
+    - NXPI
+    - PCAR
+#
+- module: MorningstarCH.pm
+  state: working
+  added: 2019-03-02
+  changed: 2022-05-10
+  removed:
+  urls:
+    - https://www.morningstar.ch/ch/funds/SecuritySearchResults.aspx?search=
+    - https://www.morningstar.ch/ch/funds/snapshot/snapshot.aspx?id=
+  apikey: false
+  notes: Module to acquire data from https://www.morningstar.ch/.
+  testfile: morningstarCH.t
+  testcases:
+    - CH0012056260
+    - CH0014933193
+    - CH0002788567
+    - BOGUS
 #
 - module: MorningstarJP.pm
-  state: TBD
+  state: working
   added: TBD
-  changed: ~
+  changed: 2023-04-08
+  removed: ~
+  urls: https://www.wealthadvisor.co.jp/FundData/DownloadStdYmd.do?fnc=
+  apikey: false
+  notes: ~
+  testfile: morningstarJP.t
+  testcases:
+    - 2009100101
+    - 2002013108
+#
+- module: MorningstarUK.pm
+  state: working
+  added: TBD
+  changed: 2023-05-20
   removed: ~
   urls:
   apikey: false
-  notes: ~
-  testfile: TBD
+  notes: Renamed from MStaruk.pm 2023-05-20
+  testfile: morningstarUK.t
   testcases:
 #
 - module: NSEIndia.pm
@@ -589,6 +735,26 @@
   testfile: TBD
   testcases:
 #
+- module: Sinvestor.pm
+  state: working
+  added: 2022-10-19
+  changed: 2023-06-26
+  removed: ~
+  urls:
+    - https://web.s-investor.de/app/aktien.htm?INST_ID=0000057
+    - https://web.s-investor.de/app/webauswahl.jsp
+  notes: |
+    INST_ID is an optional parameter.
+  apikey: false
+  notes: shares and funds from various sources
+  testfile: sinvestor.t
+  testcases:
+    - DE0008404005
+    - NL0011540547
+    - FR0000120628
+    - DE0009809566
+    - DE0008491002
+#
 - module: SIXfunds.pm
   state: TBD
   added: TBD
@@ -622,6 +788,38 @@
   testfile: TBD
   testcases:
 #
+- module: Stooq.pm
+  state: working
+  added: 2023-08-04
+  changed: ~
+  removed: ~
+  urls:
+    - https://stooq.com/q/?s=
+  apikey: false
+  notes: ~
+  testfile: stooq.t
+  testcases:
+    - DNP
+    - ISLN.UK
+    - LRQ
+    - GBP.UK
+    - GBPG.UK
+#
+- module: TMX.pm
+  state: working
+  added: TBD
+  changed: 2022-11-23
+  removed: ~
+  urls: https://app-money.tmx.com/graphql
+  apikey: false
+  notes: ~
+  testfile: tmx.t
+  testcases:
+    - STN
+    - BCE
+    - BMO
+    - HBI:US
+#
 - module: TNetuk.pm
   state: TBD
   added: TBD
@@ -633,13 +831,51 @@
   testfile: TBD
   testcases:
 #
+- module: Tradegate.pm
+  state: working
+  added: 2022-10-19
+  changed: 2023-06-26
+  removed: ~
+  urls:
+    - https://web.s-investor.de/app/aktien.htm?INST_ID=0000057
+    - https://web.s-investor.de/app/webauswahl.jsp
+  notes: |
+    INST_ID is an optional parameter.
+  apikey: false
+  notes: share quotes from the Tradegate platform
+  testfile: tradegate.t
+  testcases:
+    - DE0008404005
+    - NL0011540547
+    - FR0000120628
+    - XS0937858271
+    - NL0000009165
+#
+- module: Tradeville.pm
+  state: failing
+  added: ~
+  changed: ~
+  removed: 2023-05-28
+  urls: https://tradeville.ro/actiuni/actiuni-
+  apikey: false
+  notes: |
+    Issue #269 indicates the URL no longer works.
+    Suggested https://bvb.ro/FinancialInstruments/Details/FinancialInstrumentsDetails.aspx?s=
+    If we change to the bvb.ro URL, should the module be renamed to BVB.pm?
+    We probably should manually validate the test cases are still valid.
+  testfile: tradeville.t
+  testcases:
+    - TLV
+    - BRD
+    - SNP
+#
 - module: TSP.pm
   state: working
   added: 2005-03-02
-  changed: 2019-06-09
+  changed: 2023-08-12
   removed:
   urls:
-    - https://www.tsp.gov/InvestmentFunds/FundPerformance/index.html
+    - https://www.tsp.gov/fund-performance/
   apikey: false
   notes:
   testfile: tsp.t
@@ -658,17 +894,6 @@
     - L2060
     - L2065
     - LINCOME
-#
-- module: TSX.pm
-  state: TBD
-  added: TBD
-  changed: ~
-  removed: ~
-  urls:
-  apikey: false
-  notes: ~
-  testfile: TBD
-  testcases:
 #
 - module: Tdefunds.pm
   state: TBD
@@ -712,6 +937,34 @@
     - W464#
     - W719#
 #
+- module: TesouroDireto.pm
+  state: working
+  added: 2022-02-06
+  changed: ~
+  removed: ~
+  urls:
+    - https://www.tesourodireto.com.br/titulos/precos-e-taxas.htm
+  apikey: false
+  notes: ~
+  testfile: tesouro_direto.t
+  testcases:
+    - Tesouro Prefixado 2026
+    - Tesouro IPCA+ 2045
+#
+- module: TreasuryDirect.pm
+  state: working
+  added: 2022-07-20
+  changed: 2023-05-31
+  removed:
+  urls:
+    - https://www.treasurydirect.gov/GA-FI/FedInvest/todaySecurityPriceDate.htm
+  apikey: false
+  notes: Retrieve Treasury bond quotes by CUSIP from treasurydirect.gov
+  testfile: treasurydirect.t
+  testcases:
+    - 912810QT8
+    - 912810QY7
+#
 - module: Troweprice.pm
   state: working
   added: TBD
@@ -739,27 +992,51 @@
   testfile: TBD
   testcases:
 #
-- module: USFedBonds.pm
-  state: TBD
-  added: TBD
-  changed: ~
-  removed: ~
+- module: TwelveData.pm
+  state: working
+  added: 2023-05-26
+  changed: 2023-05-31
+  removed:
   urls:
-  apikey: false
-  notes: ~
-  testfile: TBD
+    - https://api.twelvedata.com/quote?symbol={$symbol}&apikey={$token}
+  apikey: true
+  notes: |
+    API Required.  Register at https://twelvedata.com.
+  testfile: twelvedata.t
   testcases:
+    - MSFT
+    - AMZN
+    - AAPL
+    - GOOGL
+    - META
+    - BRK.A
+#
+- module: USFedBonds.pm
+  state: failing
+  added: ~
+  changed: ~
+  removed: 2022-07-21
+  urls: https://www.treasurydirect.gov/indiv/tools/tools_savingsbondvalues_historical.htm
+  apikey: false
+  notes: URL returns an HTTP 404 status code. Could not find a viable replacement URL.
+  testfile: usfedbonds.t
+  testcases:
+    - E197001.200606
+    - E194112.200610
+    - E194105.200610
+    - S196712.202006
 #
 - module: Union.pm
-  state: TBD
+  state: working
   added: TBD
-  changed: ~
+  changed: 2022-07-18
   removed: ~
-  urls:
+  urls: https://legacy-apps.union-investment.de/handle?generate=true&action=doDownloadSearch&start_time=...
   apikey: false
-  notes: ~
-  testfile: TBD
+  notes: symbol has changed from WKN to ISIN
+  testfile: union.t
   testcases:
+    - DE0008491002
 #
 - module: UserAgent.pm
   state: TBD
@@ -784,26 +1061,38 @@
   testcases:
 #
 - module: XETRA.pm
-  state: TBD
-  added: TBD
-  changed: ~
+  state: working
+  added: ~
+  changed: 2023-06-26
   removed: ~
   urls:
+    - https://web.s-investor.de/app/aktien.htm?INST_ID=0000057
+    - https://web.s-investor.de/app/webauswahl.jsp
+  notes: |
+    INST_ID is an optional parameter.
   apikey: false
-  notes: ~
-  testfile: TBD
+  notes: share quotes from the XETRA platform
+  testfile: xetra.t
   testcases:
+    - DE0008404005
+    - NL0011540547
+    - FR0000120628
+    - XS0937858271
+    - NL0000009165
 #
 - module: YahooJSON.pm
   state: working
   added:
-  changed: 2019-06-16
+  changed: 2023-07-14
   removed:
   urls:
-    - https://query1.finance.yahoo.com/v7/finance/quote?symbols=
+    - https://query2.finance.yahoo.com/v11/finance/quoteSummary/?symbol=...&modules=price,summaryDetail,defaultKeyStatistics
   apikey: false
   notes: |
     Module to get data from Yahoo's API
+    See issue https://github.com/finance-quote/finance-quote/issues/264
+    Dependability of Yahoo REST API has been
+    spotty.
   testfile: yahoojson.t
   testcases:
     - SUZLON.BO
@@ -817,6 +1106,34 @@
     - AENA.MC
     - CFR.JO
 #
+- module: YahooWeb.pm
+  state: working
+  added: 2023-05-31
+  changed: 2023-07-16
+  removed:
+  urls:
+    - https://finance.yahoo.com/quote/{$symbol}?p={$symbol}
+  apikey: false
+  notes: ~
+  testfile: yahooweb.t
+  testcases:
+    - MSFT
+    - AMZN
+    - AAPL
+    - GOOGL
+    - GOOG
+    - META
+    - CSCO
+    - INTC
+    - CMCSA
+    - PEP
+    - BRK-A
+    - SEB
+    - NVR
+    - BKNG
+    - IBKR
+    - T
+#
 - module: YahooYQL.pm
   state: TBD
   added: TBD
@@ -829,15 +1146,18 @@
   testcases:
 #
 - module: ZA.pm
-  state: TBD
-  added: TBD
-  changed: ~
+  state: working
+  added: 
+  changed: 2022-05-10
   removed: ~
-  urls:
+  urls: https://www.sharenet.co.za/jse/$symbol
   apikey: false
-  notes: ~
-  testfile: TBD
+  notes: 
+    - Module to acquire data from https://www.sharenet.co.za, PR #208
+  testfile: za.t
   testcases:
+    - AGL
+    - AMS
 #
 - module: ZA_UnitTrusts.pm
   state: TBD

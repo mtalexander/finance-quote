@@ -193,8 +193,11 @@ Finance::Quote::CurrencyRates::AlphaVantage is used for currency conversion.
 This end point requires an API key, which can either be set in the environment
 or included in the configuration hash. To specify a different primary currency
 conversion method or configure fallback methods, include the 'order' key, which
-points to an array of Finance::Quote::CurrencyRates module names. See the
-documentation for the individual Finance::Quote::CurrencyRates to learn more. 
+points to an array of Finance::Quote::CurrencyRates module names.
+Setting the environment variable FQ\_CURRENCY will change the default 
+endpoint used for currency conversion.
+See the documentation for the individual Finance::Quote::CurrencyRates to
+learn more. 
 
 ## get\_default\_currency\_fields
 
@@ -225,6 +228,33 @@ will return undef unless `set_default_timeout` was previously called.
 
 `get_methods` returns the list of methods that can be passed to `new` when
 creating a quoter object and as the first argument to `fetch`.
+
+## get\_features
+
+    my %features = Finance::Quote::get_features();
+
+`get_features` returns a hash with three keys: quote\_methods, quote\_modules, and currency\_modules.
+
+    $features{quote_methods} is a hash with key/value pairs of method_name => [array of module names]
+    $features{quote_modules} is a hash with key/value pairs of module_name => [array of parameter names]
+    $features{currency_modules} is a hash with key/value pairs of currency_module_name => [array of paramater names]
+
+Parameter names are values that the module needs to function, such as API\_KEY. Most
+modules will have an empty list.  Modules with a parameter are configured when creating
+the Finance::Quote by passing the argument
+
+    'module_name_in_lower_case' => {paramter => value}
+
+to Finance::Quote->new().
+
+The keys of the $features{currency\_modules} hash are the names of currency
+modules that can be used for currency conversion and the order in which the
+modules are used is controlled by the argument
+
+    currency_rates => {order => [subset of $features{currency_modules}]} 
+
+to Finance::Quote->new().  By default, only AlphaVantage in used for 
+currency conversion, so "order" must be set to use other currency modules.
 
 # PUBLIC OBJECT METHODS
 
@@ -501,50 +531,57 @@ http://www.gnucash.org/
 
 # SEE ALSO
 
-Finance::Quote::CurrencyRates::AlphaVantage,
-Finance::Quote::CurrencyRates::ECB,
-Finance::Quote::CurrencyRates::Fixer,
-Finance::Quote::CurrencyRates::OpenExchange,
-Finance::Quote::AEX,
-Finance::Quote::ASEGR,
-Finance::Quote::ASX,
-Finance::Quote::Bloomberg,
-Finance::Quote::BSEIndia,
-Finance::Quote::Bourso,
-Finance::Quote::CSE,
-Finance::Quote::Cdnfundlibrary,
-Finance::Quote::Comdirect,
-Financ::Quote::Currencies,
-Finance::Quote::DWS,
-Finance::Quote::Deka,
-Finance::Quote::FTfunds,
-Finance::Quote::Fidelity,
-Finance::Quote::Finanzpartner,
-Finance::Quote::Fondsweb,
-Finance::Quote::Fool,
-Finance::Quote::Fundata
-Finance::Quote::GoldMoney,
-Finance::Quote::HU,
-Finance::Quote::IEXCloud,
-Finance::Quote::IndiaMutual,
-Finance::Quote::MStaruk,
-Finance::Quote::MorningstarAU,
-Finance::Quote::MorningstarJP,
-Finance::Quote::NSEIndia,
-Finance::Quote::NZX,
-Finance::Quote::OnVista,
-Finance::Quote::Oslobors,
-Finance::Quote::SEB,
-Finance::Quote::SIX,
-Finance::Quote::Tradeville,
-Finance::Quote::TSP,
-Finance::Quote::TMX,
-Finance::Quote::Tiaacref,
-Finance::Quote::Troweprice,
-Finance::Quote::USFedBonds,
-Finance::Quote::Union,
-Finance::Quote::YahooJSON,
-Finance::Quote::ZA
+    Finance::Quote::CurrencyRates::AlphaVantage,
+    Finance::Quote::CurrencyRates::ECB,
+    Finance::Quote::CurrencyRates::Fixer,
+    Finance::Quote::CurrencyRates::OpenExchange,
+    Finance::Quote::CurrencyRates::YahooJSON,
+    Finance::Quote::AEX,
+    Finance::Quote::ASEGR,
+    Finance::Quote::ASX,
+    Finance::Quote::Bloomberg,
+    Finance::Quote::BSEIndia,
+    Finance::Quote::Bourso,
+    Finance::Quote::BVB,
+    Finance::Quote::CSE,
+    Finance::Quote::Cdnfundlibrary,
+    Finance::Quote::Comdirect,
+    Finance::Quote::Consorsbank,
+    Finance::Quote::Currencies,
+    Finance::Quote::DWS,
+    Finance::Quote::Deka,
+    Finance::Quote::FTfunds,
+    Finance::Quote::Fidelity,
+    Finance::Quote::Finanzpartner,
+    Finance::Quote::Fondsweb,
+    Finance::Quote::Fool,
+    Finance::Quote::Fundata
+    Finance::Quote::GoldMoney,
+    Finance::Quote::GoogleWeb,
+    Finance::Quote::HU,
+    Finance::Quote::IEXCloud,
+    Finance::Quote::IndiaMutual,
+    Finance::Quote::MorningstarAU,
+    Finance::Quote::MorningstarCH,
+    Finance::Quote::MorningstarJP,
+    Finance::Quote::MorningstarUK,
+    Finance::Quote::NSEIndia,
+    Finance::Quote::NZX,
+    Finance::Quote::OnVista,
+    Finance::Quote::Oslobors,
+    Finance::Quote::SEB,
+    Finance::Quote::SIX,
+    Finance::Quote::TSP,
+    Finance::Quote::TMX,
+    Finance::Quote::Tiaacref,
+    Finance::Quote::TesouroDireto,
+    Finance::Quote::TreasuryDirect,
+    Finance::Quote::Troweprice,
+    Finance::Quote::TwelveData,
+    Finance::Quote::Union,
+    Finance::Quote::YahooJSON,
+    Finance::Quote::YahooWeb,
+    Finance::Quote::ZA
 
 You should have received the Finance::Quote hacker's guide with this package.
 Please read it if you are interested in adding extra methods to this package.

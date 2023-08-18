@@ -1,4 +1,5 @@
 #!/usr/bin/perl -w
+# vi: set ts=2 sw=2 noai ic showmode showmatch:  
 #
 #    Copyright (C) 1998, Dj Padzensky <djpadz@padz.net>
 #    Copyright (C) 1998, 1999 Linas Vepstas <linas@linas.org>
@@ -27,13 +28,14 @@
 #
 # This code is derived from version 0.9 of the AEX.pm module.
 
-require 5.005;
-
 use strict;
+
+use constant DEBUG => $ENV{DEBUG}; 
+use if DEBUG, 'Smart::Comments'; 
 
 package Finance::Quote::TSP;
 
-use vars qw( $TSP_URL $TSP_MAIN_URL );
+use vars qw( $TSP_URL $TSP_MAIN_URL @HEADERS );
 
 use LWP::UserAgent;
 use HTTP::Request::Common;
@@ -42,9 +44,9 @@ use POSIX;
 # VERSION
 
 # URLs of where to obtain information
-
-$TSP_URL      = 'https://secure.tsp.gov/components/CORS/getSharePricesRaw.html';
+$TSP_URL      = 'https://www.tsp.gov/data/fund-price-history.csv';
 $TSP_MAIN_URL = 'http://www.tsp.gov';
+@HEADERS      = ('user-agent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.61 Safari/537.36');
 
 sub methods { return (tsp => \&tsp) }
 
@@ -70,29 +72,41 @@ sub tsp {
   return unless @symbols;
 
   my %info;
+  my @line;
 
   # Ask for the last 7 days
-  my $startdate = strftime("%Y%m%d", localtime (time - 7*24*3600));
-  my $enddate   = strftime("%Y%m%d", localtime time);
+  my $startdate = strftime("%Y-%m-%d", localtime (time - 7*24*3600));
+  my $enddate   = strftime("%Y-%m-%d", localtime time);
 
-  my $ua = $quoter->user_agent;
-  my $reply = $ua->request(GET "$TSP_URL?startdate=$startdate&enddate=$enddate&Lfunds=1&InvFunds=1&download=0");
-  return unless ($reply->is_success);
-
-  my @line = split(/\n/, $reply->content);
-
-  return unless (@line > 1);
+  my $ua    = $quoter->user_agent;
+  my $url   = "$TSP_URL?startdate=$startdate&enddate=$enddate&Lfunds=1&InvFunds=1&download=1";
+  my $reply = $ua->get($url, @HEADERS);
+  ### [<now>] url  : $url
+  ### [<now>] reply: $reply
+  
+  unless (($reply->is_success) && (@line = split(/\n/, $reply->content)) && (@line > 1)) {
+    foreach my $symbol (@symbols) {
+      $info{$symbol, "success"}  = 0;
+      $info{$symbol, "errormsg"} = "TSP fetch failed. No data for $symbol.";
+    }
+    ### Failure: %info
+    return wantarray ? %info : \%info;
+  }
 
   my @header = split(/,/, $line[0]);
   my %column = map { format_name($header[$_]) => $_ } 0 .. $#header;
-  my @latest = split(/,/, $line[-1]);
+  my @latest = split(/,/, $line[1]);
+
+  ### [<now>]  header: @header 
+  ### [<now>]  column: %column 
+  ### [<now>]  latest: @latest 
 
   foreach (@symbols) {
     my $symbol = lc $_;
 
     if(exists $column{$symbol}) {
       $info{$_, 'success'} = 1;
-      $quoter->store_date(\%info, $_, {usdate => $latest[$column{'date'}]});
+      $quoter->store_date(\%info, $_, {isodate => $latest[$column{'date'}]});
       ($info{$_, 'last'} = $latest[$column{$symbol}]) =~ s/[^0-9]*([0-9.,]+).*/$1/s;
       $info{$_, 'currency'} = 'USD';
       $info{$_, 'method'} = 'tsp';
@@ -120,9 +134,9 @@ Finance::Quote::TSP - Obtain fund prices for US Federal Government Thrift Saving
 
     $q = Finance::Quote->new;
 
-    %info = Finance::Quote->fetch("tsp","c");       #get value of C - Common Stock Index Investment Fund
-    %info = Finance::Quote->fetch("tsp","l2040");   #get value of the L2040 Lifecycle Fund
-    %info = Finance::Quote->fetch("tsp","lincome"); #get value of the LINCOME Lifecycle Fund
+    %info = $q->fetch('tsp','c');       #get value of C - Common Stock Index Investment Fund
+    %info = $q->fetch('tsp','l2040');   #get value of the L2040 Lifecycle Fund
+    %info = $q->fetch('tsp','lincome'); #get value of the LINCOME Lifecycle Fund
 
 =head1 DESCRIPTION
 

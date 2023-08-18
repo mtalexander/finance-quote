@@ -1,4 +1,98 @@
 {{$NEXT}}
+	* TSP.pm - Was not returning hash when the HTTP GET failed completely
+	  or the content did not contain the expected CSV file. - Issue #338
+	* BSEIndia.pm - Removed print when symbol not found - Issue #335
+
+1.58      2023-08-12 10:59:05-07:00 America/Los_Angeles
+	* Consorsbank.pm - New module - PR #329
+	* Stooq.pm - New module - Issue #203
+	* Bloomberg.pm - Changed modules to utilize cookie jar - PR #331 - Issue #324
+	* AlphaVantage.pm - Apply currency scaling (GBp -> GBP) when symbol
+	  had additional ".X" suffix - Issue #281
+	  Fixed check for "Information" JSON usually returned when daily API
+	  limit has been reached.
+	* YahooWeb.pm - Fixed incorrect pricing for single character symbols
+	  and changed URL to get trade date - Issues #314 #319
+	* Another fix to the URL in YahooJSON and CurrencyRates/YahooJSON - Issue #318
+
+1.57      2023-07-01 12:37:07-07:00 America/Los_Angeles
+	* Correct set exchange in YahooJSON.pm - Issue #306
+	* Added close, change and p_change to Tradegate, XETRA and Sinvestor
+	  Added optional parameter INST_ID to specify the institute id.
+	  Fixed bug in Tradegate, XETRA and Sinvestor for numbers equal or higher than 1.000 - PR #304
+	* Added GoogleWeb Module
+	* YahooWeb module added - PR #296
+	* Added MarketWatch Module
+	* Replaced cached file with IO::String object in IndiaMutual.pm
+	* Fixed missing date in AEX.pm - Issue #298
+	* Fixed Examples in POD Documentation in a few modules - PR #295
+	* move use strict to be the first statement in TreasuryDirect.pm and TwelveData.pm #290
+	* remove old perl version requirement statements from TreasuryDirect.pm and TwelveData.pm #290
+	* removed Data::Dumper that caused another test to fail from TreasuryDirect.pm #290
+        * Fixed Fool.pm and fool.t - PR #289
+
+1.56      2023-05-29 14:56:23-07:00 America/Los_Angeles
+	* Replaced Tradeville.pm with BVB.pm - Issue #269
+	* Added new TwelveData module
+	* Updated YahooJSON.pm and CurrencyRates/YahooJSON.pm to use https://query2.finance.yahoo.com/v11 - PR #284
+	* Bourso.pm - Squash anything but numbers and period in quote values.
+	* Renamed MStarUK.pm to MorningstarUK.pm
+	* Added get_features method - PR #260
+
+1.55      2023-05-13 12:22:00-07:00 America/Los_Angeles
+	* Added YahooJSON currency rate module PR #270
+	* Added TRV => CAD in AlphaVantage.pm. Issue #265 - PR #267
+	* Quick fix for YahooJSON.pm API
+	* URL Change for MorningstarJP. Issue #261
+	* Regex fix in FTfunds.pm and changed test cases ftfunds.t. PR #262
+
+1.54      2022-12-26 15:25:02-08:00 America/Los_Angeles
+	* Fix to AEX.pm - Issue #235 - PR #244
+	* New modules Sinvestor.pm Tradegate.pm and XETRA.pm PR #243
+	* Updates to TMX.pm (Toronto Stock Exchange) PR #248 and #253
+	* Reverted API change (PR #230) in
+	  CurrencyRates/AlphaVantage.pm PR #249
+	* Fix to Fondsweb.pm PR #250
+
+1.53      2022-10-08 18:11:07-07:00 America/Los_Angeles
+	* dist.ini - changed bugtracker.web to
+	  https://github.com/finance-quote/finance-quote/issues
+	* DWS.pm - Set $info{$symbol, 'symbol'} to $symbol.
+	* Union.pm - #231 - reworked for a different CSV file.
+        * CurrencyRates/AlphaVantage.pm - API CURRENCY_EXCHANGE_RATE
+          no longer accepts free API keys. Changed to use FX_DAILY API. 
+          Issue #229 PR #230
+        * Set minimum version for LWP::UserAgent in dist.ini to
+          honor redirects.
+        * CurrencyRates/AlphaVantage.pm - Added logic to account
+          for empty JSON returned from currency exchange fetch.
+        * Bourso.pm - Added Europe and France back as failover
+          methods. These were removed some time ago in commit e26484b.
+        * Tradeville.pm - Changed hostname in URL to tradeville.ro.
+          Added logic to better account for the symbol not being
+          found.
+        * YahooJSON.pm - #202 - Account for symbols with '&'.
+        * Minor change to isoTime function in Quote.pm.
+        * Updated TSP.pm - PR #227 - update URL and handling of dates.
+
+1.52      2022-07-03 15:15:38-07:00 America/Los_Angeles
+        * Quote.pm - Fixed logic for FQ_LOAD_QUOTELET starting with "-defaults"
+          reported in issue #197. PR #199.
+        * AlphaVantage currency module: Don't recurse infinitely when exchange
+          rate is less than .001 (PR 193)
+        * Bourso.pm - Fixed data bug reported in issue #174 with PR #194.
+        * TSP.pm - Minor fix for URL used to retrieve data. PR #195.
+          Note: URL was changed after the PR was merged.
+          Module remains in a non-working status.
+        * TesouroDireto.pm - New module for Brazilian's National Treasury
+          public bounds. PR #198.
+        * Bloomberg.pm - Update Bloomberg class names #205. Correct html
+          parsing errors.
+        * MorningstarCH.pm - Re-enabled and fixed in #207.
+        * ZA.pm - Change to return price from sharenet in major denomination.
+          PR #208.
+        * Changes to SourceForge project website HTML files.
+        * Add [Prereqs] to dist.ini. #215
 
 1.51      2021-07-04 14:41:59-07:00 America/Los_Angeles
         * Fix bugs in t/fq-object-methods.t

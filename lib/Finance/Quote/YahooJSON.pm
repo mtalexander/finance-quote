@@ -35,8 +35,8 @@ use Time::Piece;
 
 # VERSION
 
-my $YIND_URL_HEAD = 'https://query1.finance.yahoo.com/v7/finance/quote?symbols=';
-my $YIND_URL_TAIL = '';
+my $YIND_URL_HEAD = 'https://query2.finance.yahoo.com/v11/finance/quoteSummary/?symbol=';
+my $YIND_URL_TAIL = '&modules=price,summaryDetail,defaultKeyStatistics';
 
 sub methods {
     return ( yahoo_json => \&yahoo_json,
@@ -57,12 +57,17 @@ sub yahoo_json {
     my $quoter = shift;
     my @stocks = @_;
     my ( %info, $reply, $url, $te, $ts, $row, @cells, $ce );
-    my ( $my_date );
+    my ( $my_date, $amp_stocks );
     my $ua = $quoter->user_agent();
 
     foreach my $stocks (@stocks) {
 
-        $url   = $YIND_URL_HEAD . $stocks . $YIND_URL_TAIL;
+        # Issue 202 - Fix symbols with Ampersand
+        # Can also be written as
+				# $amp_stocks = $stocks =~ s/&/%26/gr;
+        ($amp_stocks = $stocks) =~ s/&/%26/g;
+
+        $url   = $YIND_URL_HEAD . $amp_stocks . $YIND_URL_TAIL;
         $reply = $ua->request( GET $url);
 
         my $code    = $reply->code;
@@ -86,7 +91,7 @@ sub yahoo_json {
             # Requests for invalid symbols sometimes return 200 with an empty
             # JSON result array
             my $json_data_count
-                = scalar @{ $json_data->{'quoteResponse'}{'result'} };
+                = scalar @{ $json_data->{'quoteSummary'}{'result'} };
 
             if ( $json_data_count < 1 ) {
                 $info{ $stocks, "success" } = 0;
@@ -96,28 +101,30 @@ sub yahoo_json {
             }
             else {
 
-                my $json_resources = $json_data->{'quoteResponse'}{'result'}[0];
+		my $json_resources_price = $json_data->{'quoteSummary'}{'result'}[0]{'price'};
+		my $json_resources_summaryDetail = $json_data->{'quoteSummary'}{'result'}[0]{'summaryDetail'};
+		my $json_resources_defaultKeyStatistics = $json_data->{'quoteSummary'}{'result'}[0]{'defaultKeyStatistics'};
 
                 # TODO: Check if $json_response_type is "Quote"
                 # before attempting anything else
-                my $json_symbol = $json_resources->{'symbol'};
+                my $json_symbol = $json_resources_price->{'symbol'};
                 #    || $json_resources->{'resource'}{'fields'}{'symbol'};
-                my $json_volume = $json_resources->{'regularMarketVolume'};
+                my $json_volume = $json_resources_price->{'regularMarketVolume'}{'raw'};
                 my $json_timestamp =
-                    $json_resources->{'regularMarketTime'};
-                my $json_name = $json_resources->{'shortName'};
-                my $json_type = $json_resources->{'quoteType'};
+                    $json_resources_price->{'regularMarketTime'};
+                my $json_name = $json_resources_price->{'shortName'};
+                my $json_type = $json_resources_price->{'quoteType'};
                 my $json_price =
-                    $json_resources->{'regularMarketPrice'};
+                    $json_resources_price->{'regularMarketPrice'}{'raw'};
 
                 $info{ $stocks, "success" } = 1;
                 $info{ $stocks, "exchange" } =
-                    "Sourced from Yahoo Finance (as JSON)";
+                    $json_resources_price->{'exchangeName'};
                 $info{ $stocks, "method" } = "yahoo_json";
                 $info{ $stocks, "name" }   = $stocks . ' (' . $json_name . ')';
                 $info{ $stocks, "type" }   = $json_type;
                 $info{ $stocks, "last" }   = $json_price;
-                $info{ $stocks, "currency"} = $json_resources->{'currency'};
+                $info{ $stocks, "currency"} = $json_resources_price->{'currency'};
                 $info{ $stocks, "volume" }   = $json_volume;
 
                 # The Yahoo JSON interface returns London prices in GBp (pence) instead of GBP (pounds)
@@ -143,6 +150,16 @@ sub yahoo_json {
                     $info{ $stocks, "currency"} = "ZAR";
                 }
 
+                # Apply the same hack for Tel Aviv Stock Exchange
+                # (TASE) prices as they are returned in ILA (Agorot)
+                # instead of ILS (Shekels). TASE symbols are suffixed
+                # with ".TA" when querying Yahoo e.g. POLI.TA
+
+                if ($info{$stocks,"currency"} eq "ILA") {
+                    $info{$stocks,"last"}=$info{$stocks,"last"}/100;
+                    $info{ $stocks, "currency"} = "ILS";
+                }
+
             # Add extra fields using names as per yahoo to make it easier
             #  to switch from yahoo to yahooJSON
             # Code added by goodvibes
@@ -152,23 +169,24 @@ sub yahoo_json {
                   # in Strawberry perl 5.18.2 in Windows
                   local $^W = 0;
                   $info{ $stocks, "div_yield" } =
-                    $json_resources->{'trailingAnnualDividendYield'} * 100;
+                    $json_resources_summaryDetail->{'trailingAnnualDividendYield'}{'raw'} * 100;
                 }
                 $info{ $stocks, "eps"} =
-                    $json_resources->{'epsTrailingTwelveMonths'};
-                $info{ $stocks, "pe"} = $json_resources->{'trailingPE'};
+                    $json_resources_defaultKeyStatistics->{'trailingEps'}{'raw'};
+		#    $json_resources_summaryDetail->{'epsTrailingTwelveMonths'};
+                $info{ $stocks, "pe"} = $json_resources_summaryDetail->{'trailingPE'}{'raw'};
                 $info{ $stocks, "year_range"} =
                     sprintf("%12s - %s",
-                        $json_resources->{"fiftyTwoWeekLow"},
-                        $json_resources->{'fiftyTwoWeekHigh'});
+                        $json_resources_summaryDetail->{"fiftyTwoWeekLow"}{'raw'},
+                        $json_resources_summaryDetail->{'fiftyTwoWeekHigh'}{'raw'});
                 $info{ $stocks, "open"} =
-                    $json_resources->{'regularMarketOpen'};
+                    $json_resources_price->{'regularMarketOpen'}{'raw'};
                 $info{ $stocks, "high"} =
-                    $json_resources->{'regularMarketDayHigh'};
+                    $json_resources_price->{'regularMarketDayHigh'}{'raw'};
                 $info{ $stocks, "low"} =
-                    $json_resources->{'regularMarketDayLow'};
+                    $json_resources_price->{'regularMarketDayLow'}{'raw'};
                 $info{ $stocks, "close"} =
-                    $json_resources->{'regularMarketPreviousClose'};
+                    $json_resources_summaryDetail->{'regularMarketPreviousClose'}{'raw'};
 
                 # MS Windows strftime() does not support %T so use %H:%M:%S
                 #  instead.
@@ -206,7 +224,7 @@ Finance::Quote::YahooJSON - Obtain quotes from Yahoo Finance through JSON call
 
     $q = Finance::Quote->new;
 
-    %info = Finance::Quote->fetch("yahoo_json","SBIIN.NS");
+    %info = $q->fetch('yahoo_json','SBIN.NS');
 
 =head1 DESCRIPTION
 
