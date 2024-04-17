@@ -1,4 +1,31 @@
 {{$NEXT}}
+
+1.60      2024-04-15 17:34:46-07:00 America/Los_Angeles
+	* Removed not working modules. Issues #346, #366, and #368.
+		Fidelity.pm, Cdbfundlibrary.com, Fundata.pm, and Fool.pm.
+	* YahooJSON.pm - Added code to retrieve cookies and a "crumb" required
+		to continue to utilize the v11 API. Issue #369.
+		The YahooJSON.pm currency module was changed to use the v8 API.
+	* Added initial version of CONTRIBUTING.pod that metacpan.org utilizes.
+		It will completely replace the Hacker's Guide in the future.
+	* Bloomberg.pm - Changed module to extract data from JSON structure embedded within the HTML - Issue #360
+	* NSEIndia.pm - Eliminated need to use temp folders by storing file data from URL into a variable.
+	
+1.59      2023-12-31 14:52:12-08:00 America/Los_Angeles
+	* Fixed XETRA, Tradegate and SInvestor after webpage was restructured - Issue #350
+	* Fidelity.pm temporarily disabled - Issue #346
+	* Finanzpartner.pm - Fix scraper, did not work if quote was higher than the previous day's quote.
+	* GoogleWeb.pm - Updated to retrieve mutual fund and BATS prices - Issue #355
+	* BSEIndia.pm - Updated to use standardized data file at URL
+	  https://www.bseindia.com/download/BhavCopy/Equity/BSE_EQ_BHAVCOPY_{DDMMYYYY}.ZIP
+	  Eliminated need to use temp folders by storing standardized file data from URL into a variable.
+	  Updated names of source fields to conform to those in the standardized data file
+	* IndiaMutual.pm - Eliminated need to use temp folders by storing nav file data from URL into a variable.
+	* TMX.pm - Correct a self-reference in documentation - PR #345
+	* Stooq.pm - Added new currencies and a fix for commodities' prices
+	* YahooWeb.pm - Skip rows in the price table where the prices are "-".
+	  This seems to happen sometimes with TIAA (and perhaps other) securities
+	  including TILIX and QCILIX
 	* TSP.pm - Was not returning hash when the HTTP GET failed completely
 	  or the content did not contain the expected CSV file. - Issue #338
 	* BSEIndia.pm - Removed print when symbol not found - Issue #335
