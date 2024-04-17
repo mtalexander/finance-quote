@@ -26,6 +26,9 @@ use strict;
 use JSON qw( decode_json );
 use HTTP::Request::Common;
 
+use constant DEBUG => $ENV{DEBUG};
+use if DEBUG, 'Smart::Comments';
+
 # VERSION
 
 # Alpha Vantage recommends that API call frequency does not extend far
@@ -33,7 +36,7 @@ use HTTP::Request::Common;
 # optimal server-side performance:
 #   https://www.alphavantage.co/support/#api-key
 our @alphaqueries=();
-my $maxQueries = { quantity =>5 , seconds => 60}; # no more than x
+my $maxQueries = { quantity =>500 , seconds => 60}; # no more than x
                                                   # queries per y
                                                   # seconds, based on
                                                   # https://www.alphavantage.co/support/#support
@@ -206,6 +209,8 @@ sub alphavantage {
             . '&symbol='
             . $ticker;
 
+        ### URL: $url
+        
         my $get_content = sub {
             sleep_before_query();
             my $time=int(time()-$launch_time);
